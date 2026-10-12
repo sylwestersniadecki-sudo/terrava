@@ -52,4 +52,29 @@ $naglowki = "From: Terrava <$OD>\r\n"
 
 $ok = @mail($DO, $temat, $body, $naglowki, "-f$OD");
 
+// Zapis zgłoszenia w CRM (jeśli panel jest zainstalowany)
+$cfgFile = __DIR__ . '/panel/config.php';
+if (is_file($cfgFile)) {
+    try {
+        $c = require $cfgFile;
+        $pdo = new PDO('mysql:host=' . $c['db_host'] . ';dbname=' . $c['db_name'] . ';charset=utf8mb4', $c['db_user'], $c['db_pass'], [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+        if ($rola === 'Inwestor') {
+            $st = $pdo->prepare("INSERT INTO investors (name, email, phone, company, source, stage, next_action, next_action_date) VALUES (?,?,?,?, 'Formularz na stronie', 'kontakt', 'Oddzwonić', CURDATE())");
+            $st->execute([$imie, $email, $telefon, $firma]);
+            $iid = (int)$pdo->lastInsertId();
+            if ($tresc !== '') $pdo->prepare("INSERT INTO notes (entity, entity_id, user_id, body) VALUES ('investor', ?, 0, ?)")->execute([$iid, "Wiadomość z formularza:\n" . $tresc]);
+        } else {
+            $st = $pdo->prepare("INSERT INTO projects (name, company, contact_name, contact_email, contact_phone, summary, stage) VALUES (?,?,?,?,?,?, 'zgloszenie')");
+            $st->execute(['Zgłoszenie: ' . ($firma ?: $imie), $firma, $imie, $email, $telefon, $tresc]);
+            $pid = (int)$pdo->lastInsertId();
+            $docs = ['Odpis KRS i umowa spółki', 'Księgi wieczyste i umowa nabycia gruntu', 'Wypis i wyrys z MPZP lub decyzja WZ', 'Pozwolenie na budowę i projekt', 'Budżet z harmonogramem wydatków', 'Analiza sprzedaży', 'Warunki dla inwestorów', 'Doświadczenie dewelopera', 'Kredyty i obciążenia', 'Wycena rzeczoznawcy'];
+            $ins = $pdo->prepare('INSERT INTO project_docs (project_id, name) VALUES (?,?)');
+            foreach ($docs as $d) $ins->execute([$pid, $d]);
+        }
+        $ok = true;
+    } catch (Throwable $e) {
+        // Brak bazy nie blokuje wysyłki e-maila
+    }
+}
+
 echo json_encode(['ok' => (bool)$ok]);
