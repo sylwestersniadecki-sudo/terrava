@@ -1,0 +1,16 @@
+TERRAVA.PL — PLIKI STRONY
+
+Zawartość:
+  index.html                 strona główna
+  polityka-prywatnosci.html  szablon polityki prywatności (do uzupełnienia przez prawnika)
+  kontakt.php                obsługa formularza (wysyła e-mail)
+  logo.svg, favicon.svg      grafika
+
+Wgranie na serwer:
+  1. Skopiuj wszystkie pliki do głównego katalogu domeny terrava.pl (zwykle public_html lub www).
+  2. W kontakt.php ustaw adresy w zmiennych $DO (odbiorca) i $OD (nadawca w domenie terrava.pl).
+  3. Włącz certyfikat SSL (https) w panelu hostingu.
+  4. Uzupełnij w index.html pola w nawiasach kwadratowych: adres, e-mail, telefon, dane spółki (KRS, NIP).
+  5. Wyślij próbną wiadomość z formularza i sprawdź, czy dotarła.
+
+Wymagania: hosting z PHP 7.4 lub nowszym i działającą funkcją mail().
